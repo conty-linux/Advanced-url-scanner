@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced URL Scanner Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            background: #0d1117;
+            color: #c9d1d9;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3a8a, #7c3aed);
+            border-radius: 15px;
+            border: 1px solid #30363d;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
+            background: linear-gradient(45deg, #00d4ff, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.8;
+            color: #8b949e;
+        }
+
+        .main-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-panel {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .panel-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #58a6ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #30363d;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .file-upload-area:hover {
+            border-color: #58a6ff;
+            background: rgba(88, 166, 255, 0.05);
+        }
+
+        .file-upload-area.dragover {
+            border-color: #7c3aed;
+            background: rgba(124, 58, 237, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            opacity: 0.6;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .url-input {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 12px 15px;
+            color: #c9d1d9;
+            font-family: 'JetBrains Mono', monospace;
+            width: 100%;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: #58a6ff;
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-family: 'JetBrains Mono', monospace;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #58a6ff, #7c3aed);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(88, 166, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+        }
+
+        .btn-secondary:hover {
+            background: #30363d;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f85149, #da3633);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #56d364, #238636);
+            color: white;
+        }
+
+        .scan-progress {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            background: #21262d;
+            border-radius: 10px;
+            height: 25px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #56d364, #238636);
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            position: relative;
+        }
+
+        .progress-fill::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .current-scan {
+            font-size: 0.9rem;
+            color: #8b949e;
+            font-style: italic;
+            word-break: break-all;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .category-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+        }
+
+        .category-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .category-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--category-color);
+        }
+
+        .category-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            background: var(--category-color);
+        }
+
+        .category-info {
+            flex: 1;
+        }
+
+        .category-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .category-count {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .category-body {
+            padding: 0 20px 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .url-item {
+            background: #0d1117;
+            border: 1px solid #21262d;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .url-item:hover {
+            background: #21262d;
+            border-color: var(--category-color);
+            transform: translateX(5px);
+        }
+
+        .url-status {
+            background: var(--category-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .url-text {
+            flex: 1;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+
+        .url-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .action-btn {
+            background: #21262d;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: #30363d;
+            color: white;
+        }
+
+        .success { --category-color: #238636; }
+        .redirect { --category-color: #d29922; }
+        .client-error { --category-color: #f85149; }
+        .server-error { --category-color: #da3633; }
+        .network-error { --category-color: #8957e5; }
+
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup-content {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .close-btn {
+            background: #f85149;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #238636;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1001;
+            border: 1px solid #2ea043;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: #f85149;
+            border-color: #da3633;
+        }
+
+        .scan-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .terminal-output {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+            color: #56d364;
+        }
+
+        .terminal-line {
+            margin-bottom: 5px;
+        }
+
+        .terminal-line .timestamp {
+            color: #8b949e;
+            margin-right: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .main-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .categories-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #161b22;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #484f58;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Advanced URL Scanner</h1>
+            <p class="subtitle">Professional URL monitoring and vulnerability assessment tool for Kali Linux</p>
+        </div>
+
+        <div class="main-controls">
+            <div class="control-panel">
+                <h3 class="panel-title">📁 File Upload</h3>
+                <div class="file-upload-area" id="fileUploadArea">
+                    <div class="upload-icon">📄</div>
+                    <p>Drop your URL.txt file here or click to browse</p>
+                    <p style="font-size: 0.8rem; opacity: 0.7; margin-top: 5px;">Supports .txt files with one URL per line</p>
+                </div>
+                <input type="file" id="fileInput" class="file-input" accept=".txt" />
+                <div class="scan-controls">
+                    <button class="btn btn-primary" id="uploadBtn">
+                        📤 Upload & Parse
+                    </button>
+                    <button class="btn btn-secondary" onclick="downloadTemplate()">
+                        📋 Download Template
+                    </button>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <h3 class="panel-title">⚙️ Scan Configuration</h3>
+                <input type="text" class="url-input" id="singleUrl" placeholder="Or add single URL: https://example.com" />
+                <select class="url-input" id="scanMode" style="margin-bottom: 15px;">
+                    <option value="fast">Fast Scan (Basic Headers)</option>
+                    <option value="detailed">Detailed Scan (Full Analysis)</option>
+                    <option value="stealth">Stealth Mode (Slow & Careful)</option>
+                </select>
+                <div class="scan-controls">
+                    <button class="btn btn-success" id="startScan">
+                        🚀 Start Scan
+                    </button>
+                    <button class="btn btn-danger" id="stopScan" style="display:none;">
+                        ⏹️ Stop Scan
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearAll()">
+                        🗑️ Clear All
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="scan-progress" id="scanProgress">
+            <div class="progress-header">
+                <h3>🔄 Scanning Progress</h3>
+                <span id="scanStats">0/0 completed</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+            <div class="current-scan" id="currentScan">Ready to scan...</div>
+            <div class="terminal-output" id="terminalOutput"></div>
+        </div>
+
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card success">
+                <div class="stat-number" id="totalUrls">0</div>
+                <div class="stat-label">Total URLs</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-number" id="successCount">0</div>
+                <div class="stat-label">Success (2xx)</div>
+            </div>
+            <div class="stat-card redirect">
+                <div class="stat-number" id="redirectCount">0</div>
+                <div class="stat-label">Redirects (3xx)</div>
+            </div>
+            <div class="stat-card client-error">
+                <div class="stat-number" id="clientErrorCount">0</div>
+                <div class="stat-label">Client Errors (4xx)</div>
+            </div>
+            <div class="stat-card server-error">
+                <div class="stat-number" id="serverErrorCount">0</div>
+                <div class="stat-label">Server Errors (5xx)</div>
+            </div>
+            <div class="stat-card network-error">
+                <div class="stat-number" id="networkErrorCount">0</div>
+                <div class="stat-label">Network Errors</div>
+            </div>
+        </div>
+
+        <div class="categories-grid" id="categoriesGrid">
+            <!-- Categories will be populated dynamically -->
+        </div>
+    </div>
+
+    <!-- Popup for detailed view -->
+    <div class="popup" id="popup">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h3 id="popupTitle">URL Details</h3>
+                <button class="close-btn" onclick="closePopup()">✕</button>
+            </div>
+            <div id="popupContent"></div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Replace the existing JavaScript functions in your index.html with these updated versions
+
+let urlData = [];
+let categories = {
+    '2xx': { name: 'Success (2xx)', urls: [], class: 'success', icon: '✅' },
+    '3xx': { name: 'Redirects (3xx)', urls: [], class: 'redirect', icon: '🔄' },
+    '4xx': { name: 'Client Errors (4xx)', urls: [], class: 'client-error', icon: '⚠️' },
+    '5xx': { name: 'Server Errors (5xx)', urls: [], class: 'server-error', icon: '💥' },
+    'network': { name: 'Network Errors', urls: [], class: 'network-error', icon: '🔌' }
+};
+let scanActive = false;
+let scanAborted = false;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    setupEventListeners();
+    updateStats();
+});
+
+function setupEventListeners() {
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    const fileInput = document.getElementById('fileInput');
+
+    // File upload handlers
+    fileUploadArea.addEventListener('click', () => fileInput.click());
+    fileUploadArea.addEventListener('dragover', handleDragOver);
+    fileUploadArea.addEventListener('dragleave', handleDragLeave);
+    fileUploadArea.addEventListener('drop', handleFileDrop);
+
+    fileInput.addEventListener('change', handleFileSelect);
+
+    // Button handlers
+    document.getElementById('uploadBtn').addEventListener('click', processFile);
+    document.getElementById('startScan').addEventListener('click', startScanning);
+    document.getElementById('stopScan').addEventListener('click', stopScanning);
+    document.getElementById('singleUrl').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') addSingleUrl();
+    });
+
+    // Popup handlers
+    document.getElementById('popup').addEventListener('click', function(e) {
+        if (e.target === this) closePopup();
+    });
+}
+
+function processFile() {
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        showNotification('Please select a file first!', 'error');
+        return;
+    }
+
+    if (file.type !== 'text/plain') {
+        showNotification('Please upload a .txt file!', 'error');
+        return;
+    }
+
+    addLog(`Processing file: ${file.name} (${(file.size/1024).toFixed(2)} KB)`);
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const content = e.target.result;
+        const urls = content.split('\n')
+            .map(url => url.trim())
+            .filter(url => url && isValidUrl(url));
+
+        const duplicates = urls.filter(url => urlData.find(item => item.url === url));
+        const newUrls = urls.filter(url => !urlData.find(item => item.url === url));
+
+        newUrls.forEach(url => {
+            urlData.push({
+                url: url,
+                status: null,
+                statusText: null,
+                category: null,
+                tested: false,
+                responseTime: null,
+                headers: {},
+                timestamp: new Date().toISOString(),
+                source: 'file'
+            });
+        });
+
+        addLog(`✅ Loaded ${newUrls.length} new URLs`);
+        if (duplicates.length > 0) {
+            addLog(`⚠️ Skipped ${duplicates.length} duplicate URLs`);
+        }
+
+        updateStats();
+        renderCategories();
+        showNotification(`Successfully loaded ${newUrls.length} URLs from file!`);
+    };
+
+    reader.readAsText(file);
+}
+
+function addSingleUrl() {
+    const urlInput = document.getElementById('singleUrl');
+    const url = urlInput.value.trim();
+
+    if (!url) return;
+
+    if (!isValidUrl(url)) {
+        showNotification('Please enter a valid URL!', 'error');
+        return;
+    }
+
+    if (urlData.find(item => item.url === url)) {
+        showNotification('URL already exists!', 'error');
+        return;
+    }
+
+    urlData.push({
+        url: url,
+        status: null,
+        statusText: null,
+        category: null,
+        tested: false,
+        responseTime: null,
+        headers: {},
+        timestamp: new Date().toISOString(),
+        source: 'manual'
+    });
+
+    urlInput.value = '';
+    updateStats();
+    renderCategories();
+    addLog(`➕ Added URL: ${url}`);
+    showNotification('URL added successfully!');
+}
+
+// UPDATED: Real Flask API integration instead of mock scanning
+async function startScanning() {
+    if (urlData.length === 0) {
+        showNotification('Please add some URLs first!', 'error');
+        return;
+    }
+
+    scanActive = true;
+    scanAborted = false;
+    
+    const scanMode = document.getElementById('scanMode').value;
+    const startScanBtn = document.getElementById('startScan');
+    const stopScanBtn = document.getElementById('stopScan');
+    const progressSection = document.getElementById('scanProgress');
+
+    startScanBtn.style.display = 'none';
+    stopScanBtn.style.display = 'inline-flex';
+    progressSection.style.display = 'block';
+
+    // Clear previous results
+    Object.keys(categories).forEach(key => {
+        categories[key].urls = [];
+    });
+
+    addLog(`🚀 Starting ${scanMode} scan of ${urlData.length} URLs`);
+
+    // Prepare URLs for Flask backend
+    const urls = urlData.map(item => item.url);
+    
+    // Configure scan settings based on mode
+    const scanConfig = {
+        fast: { timeout: 5.0, stealth_mode: false, detailed_headers: false },
+        detailed: { timeout: 15.0, stealth_mode: false, detailed_headers: true },
+        stealth: { timeout: 30.0, stealth_mode: true, detailed_headers: true }
+    };
+
+    try {
+        // Start scan via Flask API
+        const response = await fetch('/scan', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                urls: urls,
+                config: scanConfig[scanMode] || scanConfig.fast
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        addLog(`✅ Scan initiated: ${result.message}`);
+        
+        // Start monitoring progress
+        monitorScanProgress();
+
+    } catch (error) {
+        addLog(`❌ Failed to start scan: ${error.message}`);
+        showNotification('Failed to start scan: ' + error.message, 'error');
+        resetScanControls();
+    }
+}
+
+// UPDATED: Real progress monitoring
+async function monitorScanProgress() {
+    const progressInterval = setInterval(async () => {
+        if (!scanActive || scanAborted) {
+            clearInterval(progressInterval);
+            return;
+        }
+
+        try {
+            const response = await fetch('/status');
+            const data = await response.json();
+
+            if (data.status === 'completed') {
+                scanActive = false;
+                clearInterval(progressInterval);
+                
+                // Load final results
+                await loadScanResults();
+                resetScanControls();
+                addLog('✅ Scan completed successfully!');
+                showNotification('Scan completed successfully!');
+                
+            } else if (data.status === 'running') {
+                // Update progress
+                updateProgress(data.progress || 0, data.stats);
+                
+                if (data.stats) {
+                    addLog(`📊 Progress: ${data.stats.completed}/${data.stats.total} completed`);
+                }
+            }
+
+        } catch (error) {
+            console.error('Error monitoring scan:', error);
+            addLog(`⚠️ Monitoring error: ${error.message}`);
+        }
+    }, 1000); // Check every second
+}
+
+// UPDATED: Load real results from Flask backend
+async function loadScanResults() {
+    try {
+        const response = await fetch('/results');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.results && data.results.length > 0) {
+            // Process results and update categories
+            data.results.forEach((result, index) => {
+                if (index < urlData.length) {
+                    const urlItem = urlData[index];
+                    
+                    urlItem.status = result.status_code;
+                    urlItem.statusText = result.status_text;
+                    urlItem.responseTime = result.response_time;
+                    urlItem.headers = result.headers || {};
+                    urlItem.tested = true;
+                    urlItem.server = result.server;
+                    urlItem.error = result.error;
+                    
+                    // Determine category
+                    urlItem.category = getCategoryFromStatus(result.status_code);
+                    
+                    // Add to appropriate category
+                    categories[urlItem.category].urls.push(urlItem);
+                }
+            });
+
+            updateStats();
+            renderCategories();
+            addLog(`📋 Loaded ${data.results.length} scan results`);
+        }
+
+    } catch (error) {
+        console.error('Error loading results:', error);
+        addLog(`❌ Failed to load results: ${error.message}`);
+        showNotification('Failed to load scan results!', 'error');
+    }
+}
+
+function stopScanning() {
+    scanAborted = true;
+    scanActive = false;
+    resetScanControls();
+    addLog('⏹️ Scan stopped by user');
+    showNotification('Scan stopped!', 'error');
+}
+
+function resetScanControls() {
+    const startScanBtn = document.getElementById('startScan');
+    const stopScanBtn = document.getElementById('stopScan');
+    
+    startScanBtn.style.display = 'inline-flex';
+    stopScanBtn.style.display = 'none';
+}
+
+function updateProgress(percentage, stats) {
+    const progressFill = document.getElementById('progressFill');
+    const scanStats = document.getElementById('scanStats');
+
+    progressFill.style.width = `${percentage}%`;
+    progressFill.textContent = `${Math.round(percentage)}%`;
+    
+    if (stats) {
+        scanStats.textContent = `${stats.completed}/${stats.total} completed`;
+    }
+}
+
+function getCategoryFromStatus(status) {
+    if (!status) return 'network';
+    if (status >= 200 && status < 300) return '2xx';
+    if (status >= 300 && status < 400) return '3xx';
+    if (status >= 400 && status < 500) return '4xx';
+    if (status >= 500 && status < 600) return '5xx';
+    return 'network';
+}
+
+// Keep your existing helper functions unchanged:
+function isValidUrl(string) {
+    try {
+        const url = new URL(string);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (_) {
+        return false;
+    }
+}
+
+function updateStats() {
+    document.getElementById('totalUrls').textContent = urlData.length;
+    document.getElementById('successCount').textContent = categories['2xx'].urls.length;
+    document.getElementById('redirectCount').textContent = categories['3xx'].urls.length;
+    document.getElementById('clientErrorCount').textContent = categories['4xx'].urls.length;
+    document.getElementById('serverErrorCount').textContent = categories['5xx'].urls.length;
+    document.getElementById('networkErrorCount').textContent = categories['network'].urls.length;
+}
+
+function showNotification(message, type = 'success') {
+    const notification = document.getElementById('notification');
+    notification.textContent = message;
+    notification.className = `notification ${type}`;
+    notification.classList.add('show');
+
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, 4000);
+}
+
+function addLog(message) {
+    const terminal = document.getElementById('terminalOutput');
+    if (!terminal) return;
+    
+    const timestamp = new Date().toLocaleTimeString();
+    const logLine = document.createElement('div');
+    logLine.className = 'terminal-line';
+    logLine.innerHTML = `<span class="timestamp">[${timestamp}]</span>${message}`;
+    
+    terminal.appendChild(logLine);
+    terminal.scrollTop = terminal.scrollHeight;
+
+    // Keep only last 100 log entries
+    while (terminal.children.length > 100) {
+        terminal.removeChild(terminal.firstChild);
+    }
+}
+
+</script>
+// Keep all your existing helper functions like:
+// handleDragOver, handleDragLeave, handleFileDrop, handleFileSelect
+// renderCategories, showCategoryPopup, copyUrl, exportCategory, etc.
+// These don't need changes as they're UI-related
