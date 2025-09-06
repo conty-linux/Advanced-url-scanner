@@ -17,6 +17,9 @@
 
 ```bash
 # Clone repository
+
+python3 -m venv venv                  
+source venv/bin/activate
 git clone https://github.com/YOUR-USERNAME/advanced-url-scanner.git
 cd advanced-url-scanner
 
