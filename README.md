@@ -18,7 +18,7 @@ Professional URL monitoring and vulnerability assessment tool designed for Kali 
 
 ### Quick Install (Recommended)
 ```bash
-git clone <repository-url>
+git clone https://github.com/conty-linux/Advanced-url-scanner.git
 cd advanced-url-scanner
 chmod +x install.sh
 ./install.sh
