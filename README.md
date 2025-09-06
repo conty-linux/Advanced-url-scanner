@@ -18,8 +18,6 @@
 ```bash
 # Clone repository
 
-python3 -m venv venv                  
-source venv/bin/activate
 git clone https://github.com/YOUR-USERNAME/advanced-url-scanner.git
 cd advanced-url-scanner
 
@@ -52,6 +50,22 @@ advanced-url-scanner/
 │   └── .gitkeep
 └── exports/
     └── .gitkeep
+
+Install Missing Dependencies
+
+# Activate virtual environment first
+source venv/bin/activate
+
+# Upgrade pip
+pip install --upgrade pip
+
+# Install all dependencies
+pip install aiohttp flask flask-cors asyncio requests beautifulsoup4 colorama rich click
+
+# Or install from requirements file
+pip install -r backend/requirements.txt
+
+
 
 📖 Usage Examples
 Web Interface
